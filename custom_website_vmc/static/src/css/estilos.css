@@ -1,0 +1,49 @@
+a.d-block.h-100{
+  position: flex;
+}
+
+div.value_discount{
+position: absolute;
+background-color: #fe3435;
+top: 7px;
+right: 0;
+width: 65px;
+height: 35px;
+}
+
+#p01, #p02{
+display: none;
+}
+
+p#porcent{
+color: white;
+text-align:center;
+padding:5px;
+font-weight: 700px;
+}
+
+@media (max-width: 1024px) {
+div.value_discount{
+top: 40px;
+}
+}
+
+@media (max-width: 425px) {
+div.value_discount{
+top: 0;
+left: 270px;
+}
+}
+
+@media (max-width: 375px) {
+div.value_discount{
+left: 245px;
+}
+}
+
+
+@media (max-width: 320px) {
+div.value_discount{
+left: 217px;
+}
+}

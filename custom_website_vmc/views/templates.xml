@@ -1,0 +1,21 @@
+<odoo>
+    <data>
+      <template id="assets_frontend" inherit_id="website.assets_frontend" name="Custom Website">
+        <xpath expr="." position="inside">
+          <script type="text/javascript" src="/custom_website_vmc/static/src/js/main.js"></script>
+          <link rel="stylesheet" href="/custom_website_vmc/static/src/css/estilos.css"></link>
+        </xpath>
+      </template>
+      <template id="test_template" inherit_id="website_sale.products_item">
+        <xpath expr="//span[@class='d-flex h-100 justify-content-center align-items-center']" position="before">
+          <div class="value_discount">
+              <div class="product_price" itemprop="offers" itemscope="itemscope" itemtype="http://schema.org/Offer"><!--evugor: se cambia color de letra cuando hay oferta-->
+                        <p id="p01" name="p1" t-esc="combination_info['list_price']" />
+                        <p id="p02" name="p2" t-esc="combination_info['price']" />
+                        <p id="porcent" name="porcent"></p>
+              </div>
+          </div>
+        </xpath>
+      </template>
+    </data>
+</odoo>
