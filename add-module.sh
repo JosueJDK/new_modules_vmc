@@ -2,7 +2,6 @@ echo "---------------------------------"
 echo "------Creando Nuevo Modulo-------"
 echo "---------------------------------"
 
-echo "---------------------------------"
 echo "Ingrese el nombre del Modulo: "
 read NAME
 
