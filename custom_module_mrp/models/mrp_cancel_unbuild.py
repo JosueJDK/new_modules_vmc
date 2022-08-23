@@ -106,6 +106,7 @@ class CancelMrpUnbuild(models.Model):
 
     @api.model
     def create(self, vals):
+        self.create_sequence_cancel_unbuild()
         if not vals.get('name') or vals['name'] == _('New'):
             vals['name'] = self.env['ir.sequence'].next_by_code('mrp.cancel.unbuild') or _('New')
         print("Atributo vals",vals)
@@ -117,11 +118,24 @@ class CancelMrpUnbuild(models.Model):
             raise UserError(_("You cannot delete an unbuild order if the state is 'Done'."))
         return super(CancelMrpUnbuild, self).unlink()
 
+    def create_sequence_cancel_unbuild(self):
+        exist_cub =  self.env['ir.sequence'].search([('prefix','=','CUB/')])
+        if len(exist_cub) == 0:
+            self.env['ir.sequence'].create({
+                'name': 'Cancel Unbuild',
+                'code': 'mrp.cancel.unbuild',
+                'company_id': self.company_id.id,
+                'prefix': 'CUB/',
+                'padding': 5,
+                'number_next': 1,
+                'number_increment': 1
+            })
+
     def action_cancel_unbuild(self):
         datas =  self.env['stock.move'].search([('name','=',self.uo_id.name)])
         for data in datas:
             self.env['stock.move'].create({
-                'name': 'test060',
+                'name': self.name,
                 'date': self.create_date,
                 'product_id': data.product_id.id,
                 'product_uom_qty': data.product_uom_qty,
@@ -136,7 +150,7 @@ class CancelMrpUnbuild(models.Model):
             })
             print(data.product_id)
         
-        moves =  self.env['stock.move'].search([('name','=','test060')])
+        moves =  self.env['stock.move'].search([('name','=',self.name)])
         for move in moves:
             self.env['stock.move.line'].create({
                 'move_id': move.id,
@@ -156,7 +170,7 @@ class CancelMrpUnbuild(models.Model):
     def action_validate(self):
         unbuild_qty = self.env['mrp.unbuild'].search([('name','=',self.uo_id.name)])
         if(int(self.product_qty) <= int(unbuild_qty.product_qty)):
-            print("Done")
+            self.create_sequence_cancel_unbuild()
             return self.action_cancel_unbuild()
         else:
             return {
