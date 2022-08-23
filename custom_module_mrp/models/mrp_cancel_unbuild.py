@@ -117,86 +117,47 @@ class CancelMrpUnbuild(models.Model):
             raise UserError(_("You cannot delete an unbuild order if the state is 'Done'."))
         return super(CancelMrpUnbuild, self).unlink()
 
+    def action_cancel_unbuild(self):
+        datas =  self.env['stock.move'].search([('name','=',self.uo_id.name)])
+        for data in datas:
+            self.env['stock.move'].create({
+                'name': 'test060',
+                'date': self.create_date,
+                'product_id': data.product_id.id,
+                'product_uom_qty': data.product_uom_qty,
+                'product_uom': data.product_uom.id,
+                'procure_method': 'make_to_stock',
+                'location_dest_id': data.location_id.id,
+                'location_id': data.location_dest_id.id,
+                'warehouse_id': data.warehouse_id.id,
+                'unbuild_id': self.uo_id.id,
+                'company_id': self.company_id.id,
+                'state':'done'
+            })
+            print(data.product_id)
+        
+        moves =  self.env['stock.move'].search([('name','=','test060')])
+        for move in moves:
+            self.env['stock.move.line'].create({
+                'move_id': move.id,
+                'qty_done': move.product_uom_qty,
+                'product_id': move.product_id.id,
+                'product_uom_id': move.product_uom.id,
+                'location_id': move.location_id.id,
+                'location_dest_id': move.location_dest_id.id,
+                'state':'done'
+            })
+            print(move.product_uom_qty)
 
-################################################################################################################################################################################
-    def _generate_produce_moves(self):
-        moves = self.env['stock.move']
-        for unbuild in self:
-            if unbuild.uo_id:
-                raw_moves = unbuild.uo_id.move_raw_ids.filtered(lambda move: move.state == 'done')
-                qty_produced = 0
-                for line in unbuild.uo_id.move_finished_ids.move_line_ids:
-                    if line.product_id != unbuild.uo_id.product_id or line.state != 'done':
-                        continue
-                    qty_produced += line.product_uom_id._compute_quantity(line.qty_done, unbuild.product_uom_id)
-                if float_is_zero(qty_produced, precision_rounding=unbuild.product_uom_id.rounding):
-                    return moves
-                factor = unbuild.product_qty / qty_produced
-                for product in raw_moves.product_id:
-                    product_moves = raw_moves.filtered(lambda m: m.product_id == product)
-                    qty = sum(product_moves.mapped('product_uom_qty'))
-                    moves += unbuild._generate_move_from_existing_move_with_qty(product_moves[0], factor * qty, product_moves[0].location_dest_id, self.location_dest_id)
-            else:
-                factor = unbuild.product_uom_id._compute_quantity(unbuild.product_qty, unbuild.bom_id.product_uom_id) / unbuild.bom_id.product_qty
-                boms, lines = unbuild.bom_id.explode(unbuild.product_id, factor, picking_type=unbuild.bom_id.picking_type_id)
-                for line, line_data in lines:
-                    moves += unbuild._generate_move_from_bom_line(line.product_id, line.product_uom_id, line_data['qty'], bom_line_id=line.id)
-        return moves
-################################################################################################################################################################################
+        return self.write({'state': 'done'})
 
-
-
-################################################################################################################################################################################
-# Funcion para llenar la tabla de STOCK.MOVE
-    def _generate_move_from_existing_move(self, move, factor, location_id, location_dest_id):
-        return self._generate_move_from_existing_move_with_qty(move, move.product_uom_qty * factor, location_id, location_dest_id)
-    
-    def _generate_move_from_existing_move_with_qty(self, move, qty, location_id, location_dest_id):
-        return self.env['stock.move'].create({
-            'name': self.name,
-            'date': self.create_date,
-            'product_id': move.product_id.id,
-            'product_uom_qty': qty,
-            'product_uom': move.product_uom.id,
-            'procure_method': 'make_to_stock',
-            'location_dest_id': location_dest_id.id,
-            'location_id': location_id.id,
-            'warehouse_id': location_dest_id.get_warehouse().id,
-            'unbuild_id': self.id,
-            'company_id': move.company_id.id,
-        })
-
-    def _generate_move_from_bom_line(self, product, product_uom, quantity, bom_line_id=False, byproduct_id=False):
-        location_id = bom_line_id and product.property_stock_production or self.location_id
-        location_dest_id = bom_line_id and self.location_dest_id or product.with_context(force_company=self.company_id.id).property_stock_production
-        warehouse = location_dest_id.get_warehouse()
-        return self.env['stock.move'].create({
-            'name': self.name,
-            'date': self.create_date,
-            'bom_line_id': bom_line_id,
-            'byproduct_id': byproduct_id,
-            'product_id': product.id,
-            'product_uom_qty': quantity,
-            'product_uom': product_uom.id,
-            'procure_method': 'make_to_stock',
-            'location_dest_id': location_dest_id.id,
-            'location_id': location_id.id,
-            'warehouse_id': warehouse.id,
-            'unbuild_id': self.id,
-            'company_id': self.company_id.id,
-        })
-
-################################################################################################################################################################################
 
     # Validacion de la nueva orden 
     def action_validate(self):
         unbuild_qty = self.env['mrp.unbuild'].search([('name','=',self.uo_id.name)])
         if(int(self.product_qty) <= int(unbuild_qty.product_qty)):
             print("Done")
-            datas =  self.env['mrp.unbuild'].search([('name','=',self.uo_id.name)])
-            for data in datas:
-                print(data)
-            # return self.action_unbuild()
+            return self.action_cancel_unbuild()
         else:
             return {
                 'name': _('Insufficient Quantity'),
