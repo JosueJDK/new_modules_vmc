@@ -1,0 +1,63 @@
+<odoo>
+  <data>
+  <record model="ir.actions.act_window" id="action_mrp_cancel_unbuild_moves">
+        <field name="name">Stock Moves</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">stock.move.line</field>
+        <field name="view_mode">tree,form</field>
+        <field name="domain">['|', ('move_id.unbuild_id', '=', active_id), ('move_id.consume_unbuild_id', '=', active_id)]</field>
+    </record>
+
+        <record id="mrp_cancel_unbuild_form_view" model="ir.ui.view">
+            <field name="name">mrp.cancel.unbuild.form</field>
+            <field name="model">mrp.cancel.unbuild</field>
+            <field name="arch" type="xml">
+                <form string="Unbuild Orders">
+                    <header>
+                        <button name="action_validate" string="Unbuild" type="object" states="draft" class="oe_highlight"/>
+                        <field name="state" widget="statusbar" statusbar_visible="draft,done"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_button_box" name="button_box">
+                            <button class="oe_stat_button" name="%(action_mrp_cancel_unbuild_moves)d"
+                                    string="Product Moves" type="action" icon="fa-exchange" states="done"/>
+                        </div>
+                        <div class="oe_title">
+                            <h1><field name="name" placeholder="Unbuild Order" nolabel="1"/></h1>
+                        </div>
+                        <group>
+                            <group>
+                                <field name="product_id" attrs="{'readonly':[('uo_id','!=',False)]}" force_save="1"/>
+                                <field name="bom_id" attrs="{'readonly':[('uo_id','!=',False)]}" force_save="1"/>
+                                <label for="product_qty"/>
+                                <div class="o_row">
+                                    <field name="product_qty"/>
+                                    <field name="product_uom_id" options="{'no_open':True,'no_create':True}" groups="uom.group_uom"/>
+                                </div>
+                            </group> 
+                             <group>
+                                <field name="uo_id"/>
+                                <!-- <field name="location_id" options="{'no_create': True}" groups="stock.group_stock_multi_locations"/>
+                                <field name="location_dest_id" options="{'no_create': True}" groups="stock.group_stock_multi_locations"/> -->
+                                <field name="has_tracking" invisible="1"/>
+                                <field name="company_id" group="base.group_multi_company"/>
+                            </group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+        <record id="mrp_cancel_unbuild_action_view" model="ir.actions.act_window">
+          <field name="name">cancel Unbuild Product</field>
+          <field name="type">ir.actions.act_window</field>
+          <field name="res_model">mrp.cancel.unbuild</field>
+          <field name="view_mode">tree,form</field>
+        </record>
+
+    <menuitem id="menu_mrp_cancel_unbuild"
+          name="Anular Orden de Descontruccion"
+          parent="mrp.menu_mrp_manufacturing"
+          action="mrp_cancel_unbuild_action_view"
+          sequence="30"/>
+  </data>
+</odoo>
