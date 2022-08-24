@@ -5,30 +5,30 @@ from odoo.tools import float_compare, float_round, float_is_zero
 
 class CancelMrpUnbuild(models.Model):
     _name = 'mrp.cancel.unbuild'
-    _description = 'Cancelar orden de Descontruccion'
+    _description = 'Cancelar orden de desconstruccion'
     _order = 'id desc'
     
 
     # Nombre de la referencia
-    name = fields.Char('Reference Cancel Unbuild', copy=False, readonly=True, default=lambda x: _('New'))
+    name = fields.Char('Referencia', copy=False, readonly=True, default=lambda x: _('New'))
 
     # Id del producto fabricado
     product_id = fields.Many2one(
-        'product.product', 'Product', check_company=True,
+        'product.product', 'Producto', check_company=True,
         domain="[('bom_ids', '!=', False), '|', ('company_id', '=', False), ('company_id', '=', company_id)]",
         required=True, states={'done': [('readonly', True)]})
     
     # Cantidad de productos producidos
     product_qty = fields.Float(
-        'Quantity', default=1.0,
+        'Cantidad', default=1.0,
         required=True, states={'done':[('readonly', True)]})
     # Unidad de medida
     product_uom_id = fields.Many2one(
-        'uom.uom', 'Unit of Measure',
+        'uom.uom', 'Unidad de Medida',
         required=True, states={'done': [('readonly', True)]})
     # Lista de materiales del producto producido
     bom_id = fields.Many2one(
-        'mrp.bom', 'Bill of Material',
+        'mrp.bom', 'Lista de Materiales',
         domain="""[
         '|',
             ('product_id', '=', product_id),
@@ -44,13 +44,13 @@ class CancelMrpUnbuild(models.Model):
 
     # Id de la compania
     company_id = fields.Many2one(
-        'res.company', 'Company',
+        'res.company', 'Compania',
         default=lambda s: s.env.company,
         required=True, index=True, states={'done': [('readonly', True)]})
 
-    # Id de la orden de descontruccion que tengas state 'done'
+    # Id de la orden de desconstruccion que tengas state 'done'
     uo_id = fields.Many2one(
-        'mrp.unbuild', 'Unbuild Order',
+        'mrp.unbuild', 'Orden de Desconstruccion',
         domain="[('state', 'in', ['done', 'cancel']), ('company_id', '=', company_id)]",
         states={'done': [('readonly', True)]}, check_company=True)
     
@@ -65,11 +65,7 @@ class CancelMrpUnbuild(models.Model):
     def _onchange_company_id(self):
         if self.company_id:
             warehouse = self.env['stock.warehouse'].search([('company_id', '=', self.company_id.id)], limit=1)
-        #     self.location_id = warehouse.lot_stock_id
-        #     self.location_dest_id = warehouse.lot_stock_id
-        # else:
-        #     self.location_id = False
-        #     self.location_dest_id = False
+
 
     # Mostrar los productos relacionados con esa orden de desconstruccion
     @api.onchange('uo_id')
@@ -126,7 +122,7 @@ class CancelMrpUnbuild(models.Model):
             list_ids.append(id_.unbuild_id.id)
         if self.uo_id.id in list_ids:
             self.write({'state': 'draft'})
-            raise UserError(_("No puedes cancelar la misma orden de descontruccion dos o mas veces!.")) 
+            raise UserError(_("No puedes cancelar la misma orden de desconstruccion dos o mas veces!.")) 
         else:
             datas =  self.env['stock.move'].search([('name','=',self.uo_id.name)])
             for data in datas:

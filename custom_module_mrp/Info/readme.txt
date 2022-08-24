@@ -1,2 +1,0 @@
-------------------------------
--mensaje en caso el valor ingresado sea menor o igual que 0

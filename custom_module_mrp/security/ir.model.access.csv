@@ -1,3 +1,2 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_custom_module_mrp_custom_module_mrp,custom_module_mrp.custom_module_mrp,model_custom_module_mrp_custom_module_mrp,base.group_user,1,1,1,1
-
+access_cancel_unbuild,Cancel Unbuild,model_mrp_cancel_unbuild,base.group_user,1,1,1,1

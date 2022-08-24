@@ -44,14 +44,32 @@
             </form>
         </field>
     </record>
+
+    <record id="mrp_cacnel_unbuild_tree_view" model="ir.ui.view">
+            <field name="name">mrp.cancel.unbuild.tree</field>
+            <field name="model">mrp.cancel.unbuild</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name"/>
+                    <field name="product_id"/>
+                    <field name="bom_id"/>
+                    <field name="uo_id"/>
+                    <field name="product_qty"/>
+                    <field name="product_uom_id" groups="uom.group_uom"/>
+                    <field name="state"/>
+                    <field name="company_id" groups="base.group_multi_company"/>
+                </tree>
+            </field>
+        </record>
+
     <record id="mrp_cancel_unbuild_action_view" model="ir.actions.act_window">
-        <field name="name">cancel Unbuild Product</field>
+        <field name="name">Cancelacion de Ordenes de Desconstruccion</field>
         <field name="type">ir.actions.act_window</field>
         <field name="res_model">mrp.cancel.unbuild</field>
         <field name="view_mode">tree,form</field>
     </record>
     <menuitem id="menu_mrp_cancel_unbuild"
-          name="Anular Orden de Descontruccion"
+          name="Anular Orden de desconstruccion"
           parent="mrp.menu_mrp_manufacturing"
           action="mrp_cancel_unbuild_action_view"
           sequence="30"/>

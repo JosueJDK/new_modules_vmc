@@ -9,7 +9,7 @@ class StockWarnInsufficientQtyCancelUnbuild(models.TransientModel):
     _inherit = 'stock.warn.insufficient.qty'
     _description = 'Cantidad Insuficiente de Descontruidos'
 
-    cancel_unbuild_id = fields.Many2one('mrp.cancel.unbuild', 'Cancelar Descontruccion')
+    cancel_unbuild_id = fields.Many2one('mrp.cancel.unbuild', 'Cancelar desconstruccion')
 
     def _get_reference_document_company_id(self):
         return self.cancel_unbuild_id.company_id
