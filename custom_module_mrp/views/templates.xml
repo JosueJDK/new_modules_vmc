@@ -1,6 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <data>
-      
-    </data>
+    <record id="test" model="ir.ui.view">
+        <field name="name">test.cancel.unbuild</field>
+        <field name="model">mrp.unbuild</field>
+        <field name="inherit_id" ref="mrp.mrp_unbuild_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//button[@name='action_validate']" position="after">
+                <button name="action_validate" string="Cancelar Desconstruccion" type="object" states="done" class="oe_highlight"/>
+            </xpath>
+        </field>
+    </record>
 </odoo>
-w

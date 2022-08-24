@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# -- coding: utf-8 --
 from odoo import api, fields, models, _
 from odoo.exceptions import AccessError, UserError
 from odoo.tools import float_compare, float_round, float_is_zero
@@ -55,18 +55,6 @@ class CancelMrpUnbuild(models.Model):
         states={'done': [('readonly', True)]}, check_company=True)
     
     has_tracking=fields.Selection(related='product_id.tracking', readonly=True)
-
-    # location_id = fields.Many2one(
-    #     'stock.location', 'Source Location',
-    #     domain="[('usage','=','internal'), '|', ('company_id', '=', False), ('company_id', '=', company_id)]",
-    #     check_company=True,
-    #     required=True, states={'done': [('readonly', True)]}, help="Location where the product you want to unbuild is.")
-    
-    # location_dest_id = fields.Many2one(
-    #     'stock.location', 'Destination Location',
-    #     domain="[('usage','=','internal'), '|', ('company_id', '=', False), ('company_id', '=', company_id)]",
-    #     check_company=True,
-    #     required=True, states={'done': [('readonly', True)]}, help="Location where you want to send the components resulting from the unbuild order.")
 
     # Estado de anulacion de la orden de desconstruccion
     state = fields.Selection([
@@ -132,38 +120,44 @@ class CancelMrpUnbuild(models.Model):
             })
 
     def action_cancel_unbuild(self):
-        datas =  self.env['stock.move'].search([('name','=',self.uo_id.name)])
-        for data in datas:
-            self.env['stock.move'].create({
-                'name': self.name,
-                'date': self.create_date,
-                'product_id': data.product_id.id,
-                'product_uom_qty': data.product_uom_qty,
-                'product_uom': data.product_uom.id,
-                'procure_method': 'make_to_stock',
-                'location_dest_id': data.location_id.id,
-                'location_id': data.location_dest_id.id,
-                'warehouse_id': data.warehouse_id.id,
-                'unbuild_id': self.uo_id.id,
-                'company_id': self.company_id.id,
-                'state':'done'
-            })
-            print(data.product_id)
-        
-        moves =  self.env['stock.move'].search([('name','=',self.name)])
-        for move in moves:
-            self.env['stock.move.line'].create({
-                'move_id': move.id,
-                'qty_done': move.product_uom_qty,
-                'product_id': move.product_id.id,
-                'product_uom_id': move.product_uom.id,
-                'location_id': move.location_id.id,
-                'location_dest_id': move.location_dest_id.id,
-                'state':'done'
-            })
-            print(move.product_uom_qty)
+        id_cub = self.env['stock.move'].search([('name','=ilike','CUB/%')])
+        list_ids = []
+        for id_ in id_cub:
+            list_ids.append(id_.unbuild_id.id)
+        if self.uo_id.id in list_ids:
+            self.write({'state': 'draft'})
+            raise UserError(_("No puedes cancelar la misma orden de descontruccion dos o mas veces!.")) 
+        else:
+            datas =  self.env['stock.move'].search([('name','=',self.uo_id.name)])
+            for data in datas:
+                self.env['stock.move'].create({
+                    'name': self.name,
+                    'date': self.create_date,
+                    'product_id': data.product_id.id,
+                    'product_uom_qty': data.product_uom_qty,
+                    'product_uom': data.product_uom.id,
+                    'procure_method': 'make_to_stock',
+                    'location_dest_id': data.location_id.id,
+                    'location_id': data.location_dest_id.id,
+                    'warehouse_id': data.warehouse_id.id,
+                    'unbuild_id': self.uo_id.id,
+                    'cancel_unbuild_id' : self.id,
+                    'company_id': self.company_id.id,
+                    'state':'done'
+                })
 
-        return self.write({'state': 'done'})
+            moves =  self.env['stock.move'].search([('name','=',self.name)])
+            for move in moves:
+                self.env['stock.move.line'].create({
+                    'move_id': move.id,
+                    'qty_done': move.product_uom_qty,
+                    'product_id': move.product_id.id,
+                    'product_uom_id': move.product_uom.id,
+                    'location_id': move.location_id.id,
+                    'location_dest_id': move.location_dest_id.id,
+                    'state':'done'
+                })
+            return self.write({'state': 'done'})
 
 
     # Validacion de la nueva orden 
@@ -182,3 +176,10 @@ class CancelMrpUnbuild(models.Model):
                 'target': 'new'}
             
 
+class StockMove(models.Model):
+    _inherit = 'stock.move'
+
+    cancel_unbuild_id = fields.Many2one(
+        'mrp.cancel.unbuild', 'Disassembly Order', check_company=True)
+    cancel_consume_unbuild_id = fields.Many2one(
+        'mrp.cancel.unbuild', 'Consumed Disassembly Order', check_company=True)
